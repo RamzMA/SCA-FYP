@@ -129,21 +129,37 @@ def detect_card(image):
         reverse=True
     )
 
+    image_area = image.shape[0] * image.shape[1]
+
     #Check for first 20 contours in sorted contours from earlier as there may be many and we only need the biggest
     for contour in contours[:20]:
+        area = cv2.contourArea(contour)
+        if area <= 10000 or area / image_area < 0.05:
+            continue
+
+        box = cv2.minAreaRect(contour)
+        box_width, box_height = box[1]
+        if min(box_width, box_height) == 0:
+            continue
+
+        aspect_ratio = max(box_width, box_height) / min(box_width, box_height)
+        if not 1.3 <= aspect_ratio <= 2.2:
+            continue
+
         perimeter = cv2.arcLength(contour, True)
 
-        #Simplify contour into polygon and use 0.02 for smaller epsilon for perserving more details and more points
+        #Simplify contour into a polygon. The card edge may not be perfectly square in the image,
+        #so accept contours that approximate to a rectangle rather than requiring exactly 4 points.
         approximate = cv2.approxPolyDP(
             contour,
             0.02 * perimeter,
             True
         )
 
-        #Ensure it is a rectangle with 4 points and large enough contour area
-        if len(approximate) == 4 and cv2.contourArea(contour) > 10000:
-            points = approximate.reshape(4,2)
-            return perspective_transform(image, points)
+        if len(approximate) >= 4:
+            # Use the minimum-area box to get the true 4 corners of the card even when the contour is slightly irregular.
+            points = cv2.boxPoints(box)
+            return perspective_transform(image, points.astype(np.float32))
     return None
 
 def main():
@@ -158,6 +174,8 @@ def main():
     card = detect_card(image)
 
     if card is None:
+        if OUTPUT_PATH.exists():
+            OUTPUT_PATH.unlink()
         print("No ID card detected.")
         return
 
