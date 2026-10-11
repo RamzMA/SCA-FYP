@@ -3,6 +3,11 @@ cv/data/raw/
 cv/data/processed/
 cv/data/labelled/
 
+# Keep image and video files out of Git anywhere in CV data folders
+**/data/raw/**
+**/data/processed/**
+**/data/labelled/**
+
 # Python
 __pycache__/
 *.pyc
