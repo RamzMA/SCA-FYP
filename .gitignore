@@ -1,0 +1,13 @@
+# Student ID images and videos
+cv/data/raw/
+cv/data/processed/
+cv/data/labelled/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Environment variables
+.env
