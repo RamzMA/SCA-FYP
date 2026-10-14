@@ -4,12 +4,12 @@ import easyocr
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 IMAGE_PATH = PROJECT_ROOT / 'data' / 'processed' / "manual_card.jpg"
+reader = easyocr.Reader(['en'], gpu=False)
 
 def extract_student_details(image_path):
     """
     Initialize and use EasyOCR to extract student number and name
     """
-    reader = easyocr.Reader(['en'], gpu=False)
     result = reader.readtext(str(image_path)) 
 
     """
