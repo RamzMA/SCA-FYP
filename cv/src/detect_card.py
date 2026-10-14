@@ -14,7 +14,7 @@ import numpy as np
 """
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-IMAGE_PATH = PROJECT_ROOT / "data" / "raw" / "test_card.jpg"
+IMAGE_PATH = PROJECT_ROOT / "data" / "raw" / "test_card.png"
 OUTPUT_PATH = PROJECT_ROOT / "data" / "processed" / "detected_card.jpg"
 
 """
