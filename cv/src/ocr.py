@@ -14,6 +14,11 @@ def extract_student_details(image_path):
 
     student_number = None
     student_name = None
+    student_name_confidence = 0.0
+    excluded_name_terms = {
+        'BACHELOR', 'MASTER', 'PHD', 'SCIENCE', 'DEGREE', 'UNIVERSITY',
+        'DATE', 'BIRTH', 'VALID', 'UNTIL',
+    }
 
     for box,text,confidence in result:
         cleaned = text.strip()
@@ -22,14 +27,19 @@ def extract_student_details(image_path):
 
         if re.match(r'^\d{8}$', cleaned):
             student_number = cleaned
-        elif (
-            len(cleaned.split()) >= 2
-            and cleaned.isupper()
-            and cleaned.replace(" ", "").isalpha()
-            and 'UNIVERSITY' not in cleaned
-            and 'DEGREE' not in cleaned
-        ):
-            student_name = cleaned
+        else:
+            words = cleaned.split()
+            normalized_words = {word.upper() for word in words}
+            is_name_candidate = (
+                len(words) >= 2
+                and cleaned.isupper()
+                and cleaned.replace(" ", "").isalpha()
+                and not normalized_words.intersection(excluded_name_terms)
+            )
+
+            if is_name_candidate and confidence > student_name_confidence:
+                student_name = cleaned
+                student_name_confidence = confidence
 
     return student_number, student_name
 
