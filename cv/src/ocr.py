@@ -3,7 +3,7 @@ import re
 import easyocr
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-IMAGE_PATH = PROJECT_ROOT / 'data' / 'processed' / "manual_card.jpg"
+IMAGE_PATH = PROJECT_ROOT / 'data' / 'processed' / "detected_card.jpg"
 reader = easyocr.Reader(['en'], gpu=False)
 
 def extract_student_details(image_path):
