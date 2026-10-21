@@ -18,7 +18,8 @@ def extract_student_details(image_path):
     """
     student_number = None
     student_name = None
-    student_name_confidence = 0.0
+    number_box = None
+
     excluded_name_terms = {
         'BACHELOR', 'MASTER', 'PHD', 'SCIENCE', 'DEGREE', 'UNIVERSITY',
         'DATE', 'BIRTH', 'VALID', 'UNTIL',
@@ -36,24 +37,18 @@ def extract_student_details(image_path):
         # Check if the text is a student number if contains 8 digits
         if re.match(r'^\d{8}$', cleaned):
             student_number = cleaned
-        else:
-            words = cleaned.split()
-            #Uppercase all words and check if any word in exlcuded terms
-            normalized_words = {word.upper() for word in words}
-            is_name_candidate = (
-                len(words) >= 2
-                and cleaned.isupper()
-                #check word is alphabetical and no spaces
-                and cleaned.replace(" ", "").isalpha()
-                and not normalized_words.intersection(excluded_name_terms)
-            )
+            number_box = box
 
-            # If the text is a name candidate and has a higher confidence than the previous name, update the student name and confidence
-            if is_name_candidate and confidence > student_name_confidence:
-                student_name = cleaned
-                student_name_confidence = confidence
 
-    return student_number, student_name
+    if number_box is not None:
+        number_bottom = max(p[1] for p in number_box)
+        number_height = (number_bottom - min(p[1] for p in number_box))
+
+        canidates = []
+
+
+            
+
 
 def main():
     if not IMAGE_PATH.exists():
