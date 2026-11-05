@@ -13,6 +13,11 @@ def main():
     lecture_date = date.today().isoformat()
     conn = get_connection()
 
+    """
+    Iterate through all frames in the FRAME_DIR
+        and detect the ID card 
+        then extract student details and record attendance
+    """
     for path in sorted(FRAME_DIR.glob("frame_*.jpg")):
         image = cv2.imread(str(path))
         card, _, _ = detect_card(image)
@@ -28,6 +33,7 @@ def main():
             print("No student number detected in frame:", path.name)
             continue
 
+        # Record attendance with the extracted student details and print summary
         is_new_record = record_attendance(conn, number, name, lecture_date)
         status = "New record" if is_new_record else "Duplicate record"
         print(f"Summary: {path.name} - {number}: {name} / {status} -> {lecture_date}")
