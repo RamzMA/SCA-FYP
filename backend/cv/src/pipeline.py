@@ -1,3 +1,5 @@
+
+import tempfile
 from datetime import date
 from pathlib import Path
 import cv2
@@ -6,41 +8,63 @@ from attendance import CSV_PATH, get_connection, record_attendance, export_to_cs
 from ocr import extract_student_details
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-FRAME_DIR = PROJECT_ROOT / "data" / "processed" / "frames"
-CROP_PATH = PROJECT_ROOT / "data" / "processed" / "current_crop.jpg"
+DEFAULT_VIDEO = PROJECT_ROOT / "data" / "raw" / "test_video.mp4"
 
-def main():
-    lecture_date = date.today().isoformat()
+def process_video(video_path, lecture_date, frame_interval=30):
+    capture = cv2.VideoCapture(str(video_path))
+    if not capture.isOpened():
+        raise FileNotFoundError(f"Could not open video: {video_path}")
+    
     conn = get_connection()
 
-    """
-    Iterate through all frames in the FRAME_DIR
-        and detect the ID card 
-        then extract student details and record attendance
-    """
-    for path in sorted(FRAME_DIR.glob("frame_*.jpg")):
-        image = cv2.imread(str(path))
-        card, _, _ = detect_card(image)
+    summary = {
+        "frames_processed": 0,
+        "no_card_detected": 0,
+        "unreadable_text": 0,
+        "attendance_recorded": 0,
+        "duplicate_records": 0,
+    }
 
-        if card is None:
-            print("No ID card detected in frame:", path.name)
-            continue
+    with tempfile.TemporaryDirectory() as temp:
+        crop_path = Path(temp) / "crop.jpg"
+        frame_count = 0
 
-        cv2.imwrite(str(CROP_PATH), card)
-        number, name = extract_student_details(CROP_PATH)
+        while True:
+            success, frame = capture.read()
+            if not success:
+                break
 
-        if number is None:
-            print("No student number detected in frame:", path.name)
-            continue
+            frame_count += 1
+            if (frame_count - 1) % frame_interval != 0:
+                continue
 
-        # Record attendance with the extracted student details and print summary
-        is_new_record = record_attendance(conn, number, name, lecture_date)
-        status = "New record" if is_new_record else "Duplicate record"
-        print(f"Summary: {path.name} - {number}: {name} / {status} -> {lecture_date}")
+            summary["frames_processed"] += 1
+            card, _, _ = detect_card(frame)
 
-    csv_path = export_to_csv(conn, CSV_PATH)
-    print(f"Attendance records saved to: {csv_path}")
+            if card is None:
+                summary["no_card_detected"] += 1
+                continue
+
+            cv2.imwrite(str(crop_path), card)
+            number, name = extract_student_details(crop_path)
+
+            if number is None:
+                summary["unreadable_text"] += 1
+                continue
+
+            if record_attendance(conn, number, name, lecture_date):
+                summary["attendance_recorded"].append({"student_number": number, "student_name": name})
+            else:
+                summary["duplicate_records"] += 1
+
+    capture.release()
+    export_to_csv(conn)
+    conn.close()
+    return summary
+
+def main():
+    result = process_video(DEFAULT_VIDEO, date.today().isoformat())
+    print(f'Summary: {result}')
 
 if __name__ == "__main__":
     main()
-
