@@ -13,20 +13,14 @@ except ModuleNotFoundError as error:
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 IMAGE_PATH = PROJECT_ROOT / 'data' / 'processed' / "detected_card.jpg"
-
-print("1. Starting script")
-print("2. Initializing EasyOCR Reader (this might download models if first time)")
+MIN_CONFIDENCE = 0.5
 
 # Initialize EasyOCR reader with English language and GPU disabled
 reader = easyocr.Reader(['en'], gpu=False)
 
-print("3. EasyOCR Reader initialized successfully!")
-
 #Extract student details from the OCR results
 def extract_student_details(image_path):
-    print(f"4. Reading image from: {image_path}")
     results = reader.readtext(str(image_path)) 
-    print(f"5. OCR complete. Found {len(results)} text boxes.")
 
     # Initialize variables to store student number, name, and the bounding box of the student number
     student_number = None
@@ -45,7 +39,7 @@ def extract_student_details(image_path):
         cleaned = text.strip()
         print(f"Detected: {cleaned} | confidence: {confidence:.2f}")
 
-        if re.fullmatch(r"\d{8}", cleaned):
+        if re.fullmatch(r"\d{8}", cleaned) and confidence >= MIN_CONFIDENCE:
             student_number = cleaned
             number_box = box
 
@@ -93,7 +87,6 @@ def main():
     if not IMAGE_PATH.exists():
         raise FileNotFoundError(f"Could not load image: {IMAGE_PATH}")
 
-    print("6. Extracting details")
     student_number, student_name = extract_student_details(IMAGE_PATH)
 
     print("\nATTENDANCE RESULT:")
