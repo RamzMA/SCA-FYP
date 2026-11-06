@@ -27,7 +27,7 @@ def process_video(video_path, lecture_date, frame_interval=30):
         "frames_processed": 0,
         "no_card_detected": 0,
         "unreadable_text": 0,
-        "attendance_recorded": 0,
+        "attendance_recorded": [],
         "duplicate_records": 0,
     }
 
@@ -70,7 +70,7 @@ def process_video(video_path, lecture_date, frame_interval=30):
                 summary["duplicate_records"] += 1
 
     capture.release()
-    export_to_csv(conn)
+    export_to_csv(conn, CSV_PATH)
     conn.close()
     return summary
 
