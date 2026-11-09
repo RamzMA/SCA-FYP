@@ -8,6 +8,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 IMAGE_PATH = PROJECT_ROOT / "data" / "processed" / "frames" / "frame_0002.jpg"
 OUTPUT_DIR = PROJECT_ROOT / "data" / "processed"
 
+DEBUG_CANDIDATES = True  # Set to True to print debug information about candidate bounding boxes
+
 
 def detect_card(image):
     #As image.shape comes with (height, width, channels) we only need the first two values height and width for further calculations
@@ -66,11 +68,33 @@ def detect_card(image):
         area = cv2.contourArea(contour)
         coverage = area / (width * height)
         ratio = w / h
+        extent = area / (w * h)
+        margin = 5
+        touches_edge = (
+            x <= margin or y <= margin
+            or x + w >= width - margin or y + h >= height - margin
+        )
+        dark_fraction = (brightness[y:y + h, x:x + w] < 100).mean()
 
+        reason = None
         if not 0.005 <= coverage <= 0.40:
-            continue
+            reason = "coverage"
+        elif not 1.3 <= ratio <= 2.4:
+            reason = "ratio"
+        elif extent < 0.4:
+            reason = "extent"
+        elif touches_edge:
+            reason = "edge"
+        elif dark_fraction > 0.25:
+            reason = "dark"
 
-        if not 1.3 <= ratio <= 2.4:
+        if DEBUG_CANDIDATES and coverage > 0.003:
+            print(
+                f"  cand x={x} y={y} {w}x{h} cov={coverage:.3f} ratio={ratio:.2f} "
+                f"extent={extent:.2f} dark={dark_fraction:.2f} -> {reason or 'KEPT'}"
+            )
+
+        if reason is not None:
             continue
 
         if area > best_area:
