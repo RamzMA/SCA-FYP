@@ -1,0 +1,33 @@
+:root {
+  --paper: #fbfaf6;
+  --ink: #1c1b19;
+  --accent: #1d3b5c;
+  --rule: #c9c5ba;
+  --rule-soft: #e4e0d6;
+  --card-border: #d9d5ca;
+  --success: #2f5d3a;
+  --muted: #5a5750;
+  --error: #8a2a1f;
+  --error-bg: #fbeceb;
+  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  --font-serif: 'Source Serif 4', Georgia, serif;
+}
+
+* { 
+  box-sizing: border-box; 
+}
+
+body {
+  margin: 0;
+  background: var(--paper); /* Set background color to paper color */
+  color: var(--ink); /* Set text color to ink color */
+  font-family: var(--font-sans); 
+  font-size: 15px;
+  line-height: 1.5; /* Text line height for better readability */
+}
+
+button, input { 
+  font-family: inherit; 
+  font-size: 15px; 
+}
