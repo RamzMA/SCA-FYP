@@ -22,6 +22,19 @@ export default function RecordsSection({ records, error, onRetry }) {
   // use date from records if available, otherwise default to empty array to avoid errors when mapping over dates.
   const dates = records?.dates ?? []
 
+  async function clear_records() {
+    if (!window.confirm('Are you sure you want to clear all records? This cannot be undone.')) return
+    try{
+      const res = await fetch('/api/records', { method: 'DELETE' })
+      if (!res.ok) throw new Error(`Failed to clear records: ${res.status} ${res.statusText}`)
+      setQuery('') // Clear search query after clearing records
+      onRetry() // Refresh records after clearing
+    } catch (err) {
+      console.error(err)
+      alert('Failed to clear records')
+    }
+  }
+
   return (
     <section className="records" aria-labelledby="records-heading">
       <div className="section-bar">
@@ -43,6 +56,10 @@ export default function RecordsSection({ records, error, onRetry }) {
           <a href={CSV_URL} download="attendance.csv" className="btn btn-outline-accent">
             Download CSV
           </a>
+
+          <button type="button" className="btn btn-outline-danger" onClick={clear_records}>
+            Clear Records
+          </button>
         </div>
       </div>
 
