@@ -1,2 +1,6 @@
 opencv-python
 numpy
+easyocr
+fastapi
+uvicorn[standard]
+python-multipart
