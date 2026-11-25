@@ -94,3 +94,13 @@ def get_records():
             for s in sorted(students.values(), key=lambda s: s["number"])
         ],
     }
+
+@app.delete("/records")
+def clear_records():
+    conn = get_connection()
+    try:
+        conn.execute("DELETE FROM attendance")
+        conn.commit()
+    finally:
+        conn.close()
+    return {"status": "success", "message": "All records cleared."}
