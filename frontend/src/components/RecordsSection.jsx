@@ -31,7 +31,7 @@ export default function RecordsSection({ records, error, onRetry }) {
       onRetry() // Refresh records after clearing
     } catch (err) {
       console.error(err)
-      alert('Failed to clear records')
+      alert('Failed to clear records' + (err.message ? `: ${err.message}` : ''))
     }
   }
 
