@@ -1,9 +1,10 @@
-
 from datetime import date
 from pathlib import Path
 import cv2
 from attendance import CSV_PATH, get_connection, record_attendance, export_to_csv
+from detect_card import detect_card
 from ocr import read_students
+from detect_card import detect_card
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_VIDEO = PROJECT_ROOT / "data" / "raw" / "test_video.mp4"
@@ -43,7 +44,7 @@ The function takes the sharpest frame from each group of frames and reads any st
 Each student is usually seen in several frames, so the most confident name is kept and attendance is only recorded once the whole video has been read.
 It also generates a summary of the processing results.
 """
-def process_video(video_path, lecture_date, frame_interval=10):
+def process_video(video_path, lecture_date, frame_interval=10, progress_callback=None):
     capture = cv2.VideoCapture(str(video_path))
     if not capture.isOpened():
         raise FileNotFoundError(f"Could not open video: {video_path}")
@@ -59,13 +60,22 @@ def process_video(video_path, lecture_date, frame_interval=10):
     #Best name found so far for each student number, stored as {number: (name, confidence)}
     students = {}
 
+    #Total frames in the video used to report progress as a fraction between 0 and 1
+    total_frames = capture.get(cv2.CAP_PROP_FRAME_COUNT)
+
     for frame, sharpness in sharpest_frames(capture, frame_interval):
+        if progress_callback and total_frames > 0:
+            #capture current frame position and divide by total frames to get a fraction of progress capped at 1.0
+            progress_callback(min(capture.get(cv2.CAP_PROP_POS_FRAMES) / total_frames, 1.0))
+
         if sharpness < MIN_SHARPNESS:
             summary["frames_too_blurry"] += 1
             continue
 
         summary["frames_processed"] += 1
-        found = read_students(frame)
+        #Names are read reliably on a cropped card, where the number is large. If no card is found, fall back to the whole frame.
+        card, _, _ = detect_card(frame)
+        found = read_students(card if card is not None else frame)
         if not found:
             summary["frames_without_student"] += 1
 
