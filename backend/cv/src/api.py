@@ -22,14 +22,19 @@ jobs = {}
 # Run a job in the background and update the job status in the jobs dictionary.
 def run_job(job_id, video_path, lecture_date):
     jobs[job_id]["status"] = "Processing"
+    jobs[job_id]["progress"] = 0.0
+
+    def report_progress(fraction):
+        jobs[job_id]["progress"] = fraction
+
     try:
-        jobs[job_id]["result"] = process_video(video_path, lecture_date)
+        jobs[job_id]["result"] = process_video(video_path, lecture_date, progress_callback=report_progress)
         jobs[job_id]["status"] = "Done"
     except Exception as e:
         jobs[job_id]['status'] = "Failed"
         jobs[job_id]['error'] = str(e)
 
-#Uploading video endpoint, takes in a video file and lecture date, saves the file and starts a background job to process it.
+#Uploading video endpoint takes in a video file and lecture date, saves the file and starts a background job to process it.
 @app.post("/upload/")
 def upload_video(background_tasks: BackgroundTasks, file: UploadFile = File(...), lecture_date: str = Form(...)):
     try:
