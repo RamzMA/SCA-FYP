@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { getJob, getRecords, uploadVideo } from './api'
 import UploadCard from './components/UploadCard'
 import StatusCard from './components/StatusCard'
@@ -13,6 +13,8 @@ export default function App() {
   const [file, setFile] = useState(null)
   const [phase, setPhase] = useState('idle')
   const [jobId, setJobId] = useState(null)
+  const [progress, setProgress] = useState(null)
+  const startedAt = useRef(null)
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
   const [records, setRecords] = useState(null)
@@ -55,6 +57,7 @@ export default function App() {
           setPhase('failed')
           return
         }
+        setProgress(typeof job.progress === 'number' ? job.progress : null)
         setPhase('processing')
       } catch (err) {
         if (cancelled) return
@@ -76,6 +79,8 @@ export default function App() {
     if (!file) return
     setError('')
     setResult(null)
+    setProgress(null)
+    startedAt.current = Date.now()
     setPhase('uploading')
     try {
       setJobId(await uploadVideo(file, lectureDate))
@@ -103,7 +108,14 @@ export default function App() {
           onSubmit={handleSubmit}
           busy={busy}
         />
-        <StatusCard phase={phase} result={result} error={error} fileName={file?.name} />
+        <StatusCard
+          phase={phase}
+          result={result}
+          error={error}
+          fileName={file?.name}
+          progress={progress}
+          startedAt={startedAt.current}
+        />
       </div>
 
       <RecordsSection records={records} error={recordsError} onRetry={loadRecords} />

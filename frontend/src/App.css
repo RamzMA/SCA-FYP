@@ -346,3 +346,17 @@
 .details[open] summary { 
   margin-bottom: 12px; 
 }
+
+.progress-bar-determinate { 
+  animation: none; 
+  margin-left: 0; 
+  opacity: 1; 
+  transition: 
+  width 0.4s ease; 
+}
+
+.progress-meta { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: baseline; gap: 12px; 
+}
