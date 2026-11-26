@@ -1,4 +1,15 @@
-export default function StatusCard({ phase, result, error, fileName }) {
+// Rough time left, worked out from how long the video has taken so far. Only shown once there is enough progress to estimate from.
+function timeLeft(progress, startedAt) {
+  if (!startedAt || progress < 0.05) return 'Estimating time left'
+  const elapsed = (Date.now() - startedAt) / 1000
+  const remaining = elapsed / progress - elapsed
+  if (remaining < 60) return 'Less than a minute left'
+  return `About ${Math.round(remaining / 60)} min left`
+}
+
+export default function StatusCard({ phase, result, error, fileName, progress, startedAt }) {
+  const percent = typeof progress === 'number' ? Math.round(progress * 100) : null
+
   return (
     <section className="card" aria-labelledby="status-heading" aria-live="polite">
       <h2 id="status-heading" className="card-title">
@@ -16,9 +27,25 @@ export default function StatusCard({ phase, result, error, fileName }) {
               ? `Uploading ${fileName ?? 'video'}`
               : 'Reading cards from the video.'}
           </div>
-          <div className="progress" role="progressbar" aria-label="Processing">
-            <div className="progress-bar" />
+          <div
+            className="progress"
+            role="progressbar"
+            aria-label="Processing"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={percent ?? undefined}
+          >
+            <div
+              className={percent === null ? 'progress-bar' : 'progress-bar progress-bar-determinate'}
+              style={percent === null ? undefined : { width: `${percent}%` }}
+            />
           </div>
+          {percent !== null && phase === 'processing' && (
+            <div className="progress-meta">
+              <strong>{percent}%</strong>
+              <span className="muted small">{timeLeft(progress, startedAt)}</span>
+            </div>
+          )}
           <div className="muted small">This page checks again every few seconds.</div>
         </div>
       )}
